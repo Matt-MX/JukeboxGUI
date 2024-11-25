@@ -73,13 +73,13 @@ class Jukebox(
             title = !"Jukebox",
             rows = 6
         ) {
-            id = "guiIdentifier"
+            id = guiIdentifier
 
             // fill gui
             // Start at 2nd slot on first row
             var i = 9 + 1
             for (song in SONGS) {
-                val asItem = Material.entries.firstOrNull { it.key() == song.key()  }
+                val asItem = Material.entries.firstOrNull { it.key() == song.key() }
                     ?: continue
 
                 val isCurrentlyPlaying = currentlyPlaying?.name() == song.key()
@@ -88,9 +88,11 @@ class Jukebox(
                     named(asItem.translationKey().translatable.color(NamedTextColor.LIGHT_PURPLE))
                     lore {
                         if (isCurrentlyPlaying) {
+                            if (!player.hasPermission(JukeboxPermissions.ACTION_STOP)) return@lore
                             +Component.empty()
                             +!"&a⏹ Click to stop"
                         } else {
+                            if (!player.hasPermission(JukeboxPermissions.ACTION_PLAY)) return@lore
                             +Component.empty()
                             +!"&a▶ Click to play"
                         }
@@ -102,8 +104,11 @@ class Jukebox(
                                 meta.addItemFlags(*ItemFlag.entries.toTypedArray())
                             }
                         }
+
+                        if (!player.hasPermission(JukeboxPermissions.ACTION_STOP)) return@button
                         click.left { stop() }
                     } else {
+                        if (!player.hasPermission(JukeboxPermissions.ACTION_PLAY)) return@button
                         click.left { play(song.key()) }
                     }
                 } slot i
@@ -118,6 +123,7 @@ class Jukebox(
                 button(Material.RED_STAINED_GLASS_PANE) {
                     named(!"&cNothing is playing")
                     lore {
+                        if (!player.hasPermission(JukeboxPermissions.ACTION_PLAY)) return@lore
                         +Component.empty()
                         +!"&fChoose a song!"
                     }
@@ -126,13 +132,16 @@ class Jukebox(
                 button(Material.LIME_STAINED_GLASS_PANE) {
                     named(!"&aNow playing:")
                     lore {
-                        val asItem = Material.entries.firstOrNull { it.key() == currentlyPlaying?.name()  }
+                        val asItem = Material.entries.firstOrNull { it.key() == currentlyPlaying?.name() }
                             ?: return@lore
 
                         +asItem.translationKey().translatable.color(NamedTextColor.LIGHT_PURPLE)
+
+                        if (!player.hasPermission(JukeboxPermissions.ACTION_STOP)) return@lore
                         +Component.empty()
                         +!"&c⏹ Click to stop"
                     }
+                    if (!player.hasPermission(JukeboxPermissions.ACTION_STOP)) return@button
                     click.left { stop() }
                 }
             }

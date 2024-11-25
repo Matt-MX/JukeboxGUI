@@ -11,6 +11,7 @@ import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.event.block.BlockDropItemEvent
 import org.bukkit.event.block.BlockPlaceEvent
+import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.plugin.java.JavaPlugin
 import java.util.Collections
 
@@ -26,10 +27,27 @@ class JukeboxGuiPlugin : JavaPlugin() {
 
         event<BlockPlaceEvent>(ignoreCancelled = true) {
             if (JukeboxItem.isItem(itemInHand)) {
+                if (!player.hasPermission(JukeboxPermissions.CREATE)) {
+                    isCancelled = true
+                    return@event
+                }
+
                 jukeboxes[block.location] = Jukebox(block.location)
                 player.sendMessage(!"&aPlaced a jukebox item!")
                 async { saveJukeboxes() }
             }
+        }
+
+        event<PlayerInteractEvent>(ignoreCancelled = true) {
+            val loc = clickedBlock?.location ?: return@event
+            val jukebox = jukeboxes[loc] ?: return@event
+
+            isCancelled = true
+            if (!player.hasPermission(JukeboxPermissions.OPEN_GUI)) {
+                return@event
+            }
+
+            jukebox.createGui(player).open(player)
         }
 
         event<BlockBreakEvent>(ignoreCancelled = true) {
@@ -37,12 +55,22 @@ class JukeboxGuiPlugin : JavaPlugin() {
             jukeboxes.remove(block.location)
                 ?: return@event
 
+            if (!player.hasPermission(JukeboxPermissions.DELETE)) {
+                isCancelled = true
+                return@event
+            }
+
             player.sendMessage(!"&cRemoved a jukebox item")
         }
 
-        event<BlockDropItemEvent> {
+        event<BlockDropItemEvent>(ignoreCancelled = true) {
             jukeboxes.remove(block.location)
                 ?: return@event
+
+            if (!player.hasPermission(JukeboxPermissions.DELETE)) {
+                isCancelled = true
+                return@event
+            }
 
             items.forEach { item ->
                 if (item.itemStack.type == Material.JUKEBOX) {
@@ -54,7 +82,7 @@ class JukeboxGuiPlugin : JavaPlugin() {
         }
 
         rawCommand("get-jukebox") {
-            permission = "jukebox.get"
+            permission = JukeboxPermissions.GET
             playerOnly = true
             runs {
                 player.inventory.addItem(JukeboxItem.getItem())
