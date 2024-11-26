@@ -28,7 +28,7 @@ import kotlin.time.Duration.Companion.seconds
 class Jukebox(
     val location: Location
 ) {
-    private val limiter = ActionCoolDown<Player>(Duration.ofSeconds(30))
+    val limiter = ActionCoolDown<Player>(Duration.ofSeconds(30))
     private val guiIdentifier = "jukebox_gui_${location.world.name}_${location.toVector()}"
     val isPlaying: Boolean
         get() = currentlyPlaying != null

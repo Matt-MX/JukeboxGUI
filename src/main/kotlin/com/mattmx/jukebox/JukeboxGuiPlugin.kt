@@ -1,6 +1,7 @@
 package com.mattmx.jukebox
 
 import com.mattmx.ktgui.GuiManager
+import com.mattmx.ktgui.commands.declarative.arg.impl.greedyStringArgument
 import com.mattmx.ktgui.commands.declarative.arg.impl.intArgument
 import com.mattmx.ktgui.commands.declarative.div
 import com.mattmx.ktgui.commands.rawCommand
@@ -9,6 +10,7 @@ import com.mattmx.ktgui.dsl.placeholder
 import com.mattmx.ktgui.dsl.placeholderExpansion
 import com.mattmx.ktgui.scheduling.async
 import com.mattmx.ktgui.utils.not
+import com.mattmx.ktgui.utils.pretty
 import com.viaversion.viaversion.api.Via
 import com.viaversion.viaversion.api.protocol.version.ProtocolVersion
 import org.bukkit.Location
@@ -131,6 +133,27 @@ class JukeboxGuiPlugin : JavaPlugin() {
                     else named.replace("minecraft:music_disc", "jukebox_song.minecraft")
                     "<lang:$translation>"
                 } ?: "Nothing"
+            }
+
+            val otherwise by greedyStringArgument()
+            placeholder("cooldown-or" / x / y / z / otherwise) {
+                val world = requestedBy?.location?.world ?: return@placeholder "Invalid world"
+                val loc = Location(world, x().toDouble(), y().toDouble(), z().toDouble())
+                val jukebox = jukeboxes[loc] ?: return@placeholder "Unknown jukebox"
+
+                jukebox.limiter.durationRemaining(requestedBy!!).let { dur ->
+                    if (dur.isZero || dur.isNegative) otherwise() else dur.pretty()
+                }
+            }
+
+            placeholder("cooldown" / x / y / z) {
+                val world = requestedBy?.location?.world ?: return@placeholder "Invalid world"
+                val loc = Location(world, x().toDouble(), y().toDouble(), z().toDouble())
+                val jukebox = jukeboxes[loc] ?: return@placeholder "Unknown jukebox"
+
+                jukebox.limiter.durationRemaining(requestedBy!!).let { dur ->
+                    if (dur.isZero || dur.isNegative) "" else dur.pretty()
+                }
             }
         }
     }
