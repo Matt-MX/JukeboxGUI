@@ -23,6 +23,7 @@ repositories {
     maven("https://repo.dmulloy2.net/repository/public/")
     maven("https://jitpack.io")
     maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
+    maven("https://repo.viaversion.com")
 }
 
 dependencies {
@@ -31,6 +32,7 @@ dependencies {
 //    compileOnly(libs.ktgui)
     compileOnly(files("./libs/api-2.4.4-alpha-dev.jar"))
     compileOnly(libs.placeholder.api)
+    compileOnly(libs.via.version)
 }
 
 tasks {

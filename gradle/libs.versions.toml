@@ -8,6 +8,7 @@ paperApi = "1.21.1-R0.1-SNAPSHOT"
 placeholderapi = "2.11.6"
 ktgui = "2.4.2-alpha"
 runPaper = "2.2.4"
+via = "5.0.0"
 
 [libraries]
 
@@ -16,6 +17,7 @@ kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "
 paper-api = { module = "io.papermc.paper:paper-api", version.ref = "paperApi" }
 placeholder-api = { module = "me.clip:placeholderapi", version.ref = "placeholderapi" }
 ktgui = { module = "com.mattmx:ktgui", version.ref = "ktgui" }
+via-version = { module = "com.viaversion:viaversion-api", version.ref = "via" }
 
 [plugins]
 

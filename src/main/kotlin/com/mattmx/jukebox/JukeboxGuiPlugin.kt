@@ -9,6 +9,9 @@ import com.mattmx.ktgui.dsl.placeholder
 import com.mattmx.ktgui.dsl.placeholderExpansion
 import com.mattmx.ktgui.scheduling.async
 import com.mattmx.ktgui.utils.not
+import com.viaversion.viaversion.api.Via
+import com.viaversion.viaversion.api.protocol.version.ProtocolVersion
+import net.neoforged.srgutils.MinecraftVersion
 import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.configuration.file.YamlConfiguration
@@ -121,7 +124,15 @@ class JukeboxGuiPlugin : JavaPlugin() {
                 val loc = Location(world, x().toDouble(), y().toDouble(), z().toDouble())
                 val jukebox = jukeboxes[loc] ?: return@placeholder "Unknown jukebox"
 
-                jukebox.currentlyPlaying?.name() ?: "Nothing"
+                val version = Via.getAPI().getPlayerVersion(requestedBy!!.uniqueId)
+
+                jukebox.currentlyPlaying?.name()?.asString()?.let { named ->
+                    val translation = if (version < ProtocolVersion.v1_21.version)
+                        named.replace("minecraft:", "item.minecraft.")
+                        .replace("music_disc.", "music_disc_") + ".desc"
+                    else named.replace("minecraft:music_disc", "jukebox_song.minecraft")
+                    "<lang:$translation>"
+                } ?: "Nothing"
             }
         }
     }

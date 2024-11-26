@@ -7,8 +7,6 @@ import com.mattmx.ktgui.dsl.button
 import com.mattmx.ktgui.dsl.gui
 import com.mattmx.ktgui.scheduling.TaskTracker
 import com.mattmx.ktgui.scheduling.TaskTrackerTask
-import com.mattmx.ktgui.scheduling.asyncRepeat
-import com.mattmx.ktgui.scheduling.syncDelayed
 import com.mattmx.ktgui.sound.sound
 import com.mattmx.ktgui.utils.not
 import com.mattmx.ktgui.utils.translatable
@@ -22,7 +20,6 @@ import org.bukkit.Particle
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemFlag
-import org.bukkit.scheduler.BukkitTask
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
@@ -61,7 +58,7 @@ class Jukebox(
 
         currentlyPlaying = sound
         val ticks = getSongDuration(sound).inWholeSeconds * 20L
-        
+
         var repeating: TaskTrackerTask? = null
         tasks.runAsyncRepeat(20L) {
             repeating = this
@@ -72,6 +69,8 @@ class Jukebox(
             stop()
             tasks.cancelAll()
         }
+
+        // TODO: maybe set block state?
 
         location.world.playSound(sound)
 
@@ -116,7 +115,7 @@ class Jukebox(
 
                 button(asItem) {
                     named(asItem.translationKey().translatable.color(NamedTextColor.LIGHT_PURPLE))
-                    named(asItem.translationKey().translatable.fallback("Unknown"))
+                    named(asItem.translationKey().translatable.fallback("Unknown Disc (Outdated Client)"))
                     lore {
                         if (isCurrentlyPlaying) {
                             if (!player.hasPermission(JukeboxPermissions.ACTION_STOP)) return@lore
