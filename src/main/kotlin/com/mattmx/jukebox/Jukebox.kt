@@ -114,8 +114,7 @@ class Jukebox(
                 val isCurrentlyPlaying = currentlyPlaying?.name() == song.key()
 
                 button(asItem) {
-                    named(asItem.translationKey().translatable.color(NamedTextColor.LIGHT_PURPLE))
-                    named(asItem.translationKey().translatable.fallback("Unknown Disc (Outdated Client)"))
+                    named(asItem.translationKey().translatable.color(NamedTextColor.LIGHT_PURPLE).fallback("Unknown Disc (Outdated Client)"))
                     lore {
                         if (isCurrentlyPlaying) {
                             if (!player.hasPermission(JukeboxPermissions.ACTION_STOP)) return@lore
