@@ -11,10 +11,8 @@ import com.mattmx.ktgui.scheduling.async
 import com.mattmx.ktgui.utils.not
 import com.viaversion.viaversion.api.Via
 import com.viaversion.viaversion.api.protocol.version.ProtocolVersion
-import net.neoforged.srgutils.MinecraftVersion
 import org.bukkit.Location
 import org.bukkit.Material
-import org.bukkit.configuration.file.YamlConfiguration
 import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.event.block.BlockDropItemEvent
 import org.bukkit.event.block.BlockPlaceEvent
@@ -66,7 +64,7 @@ class JukeboxGuiPlugin : JavaPlugin() {
                 return@event
             }
 
-            jukeboxes.remove(block.location)
+            jukeboxes.remove(block.location)?.destroy()
                 ?: return@event
 
             player.sendMessage(!"&cRemoved a jukebox item")
@@ -81,7 +79,7 @@ class JukeboxGuiPlugin : JavaPlugin() {
                 return@event
             }
 
-            jukeboxes.remove(block.location)
+            jukeboxes.remove(block.location)?.destroy()
                 ?: return@event
 
             items.forEach { item ->

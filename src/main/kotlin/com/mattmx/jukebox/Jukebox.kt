@@ -3,6 +3,7 @@ package com.mattmx.jukebox
 import com.destroystokyo.paper.ParticleBuilder
 import com.mattmx.ktgui.GuiManager
 import com.mattmx.ktgui.components.screen.GuiScreen
+import com.mattmx.ktgui.cooldown.ActionCoolDown
 import com.mattmx.ktgui.dsl.button
 import com.mattmx.ktgui.dsl.gui
 import com.mattmx.ktgui.scheduling.TaskTracker
@@ -20,12 +21,14 @@ import org.bukkit.Particle
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemFlag
+import java.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 class Jukebox(
     val location: Location
 ) {
+    private val limiter = ActionCoolDown<Player>(Duration.ofSeconds(30))
     private val guiIdentifier = "jukebox_gui_${location.world.name}_${location.toVector()}"
     val isPlaying: Boolean
         get() = currentlyPlaying != null
@@ -133,10 +136,18 @@ class Jukebox(
                         }
 
                         if (!player.hasPermission(JukeboxPermissions.ACTION_STOP)) return@button
-                        click.left { stop() }
+                        click.left {
+                            if (limiter.test(player)) {
+                                stop()
+                            } else reply(!"&cPlease wait before doing that again.")
+                        }
                     } else {
                         if (!player.hasPermission(JukeboxPermissions.ACTION_PLAY)) return@button
-                        click.left { play(song.key()) }
+                        click.left {
+                            if (limiter.test(player)) {
+                                play(song.key())
+                            } else reply(!"&cPlease wait before doing that again.")
+                        }
                     }
                 } slot i
 
@@ -170,7 +181,11 @@ class Jukebox(
                         +!"&c⏹ Click to stop"
                     }
                     if (!player.hasPermission(JukeboxPermissions.ACTION_STOP)) return@button
-                    click.left { stop() }
+                    click.left {
+                        if (limiter.test(player)) {
+                            stop()
+                        } else reply(!"&cPlease wait before doing that again.")
+                    }
                 } slot last() - 4
             }
 
@@ -179,6 +194,11 @@ class Jukebox(
                 click.left { forceClose() }
             } slot last()
         }
+    }
+
+    fun destroy() {
+        ActionCoolDown.unregister(this.limiter)
+        this.tasks.cancelAll()
     }
 
     companion object {
