@@ -1,19 +1,23 @@
 package com.mattmx.jukebox
 
 import com.mattmx.ktgui.GuiManager
+import com.mattmx.ktgui.commands.declarative.arg.impl.intArgument
+import com.mattmx.ktgui.commands.declarative.div
 import com.mattmx.ktgui.commands.rawCommand
 import com.mattmx.ktgui.dsl.event
+import com.mattmx.ktgui.dsl.placeholder
+import com.mattmx.ktgui.dsl.placeholderExpansion
 import com.mattmx.ktgui.scheduling.async
 import com.mattmx.ktgui.utils.not
 import org.bukkit.Location
 import org.bukkit.Material
-import org.bukkit.configuration.ConfigurationSection
+import org.bukkit.configuration.MemorySection
 import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.event.block.BlockDropItemEvent
 import org.bukkit.event.block.BlockPlaceEvent
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.plugin.java.JavaPlugin
-import java.util.Collections
+import java.util.*
 
 class JukeboxGuiPlugin : JavaPlugin() {
     private val jukeboxes = Collections.synchronizedMap(hashMapOf<Location, Jukebox>())
@@ -52,25 +56,30 @@ class JukeboxGuiPlugin : JavaPlugin() {
 
         event<BlockBreakEvent>(ignoreCancelled = true) {
             if (isDropItems) return@event
-            jukeboxes.remove(block.location)
-                ?: return@event
+            if (!jukeboxes.containsKey(block.location)) return@event
 
             if (!player.hasPermission(JukeboxPermissions.DELETE)) {
                 isCancelled = true
                 return@event
             }
 
+            jukeboxes.remove(block.location)
+                ?: return@event
+
             player.sendMessage(!"&cRemoved a jukebox item")
+            async { saveJukeboxes() }
         }
 
         event<BlockDropItemEvent>(ignoreCancelled = true) {
-            jukeboxes.remove(block.location)
-                ?: return@event
+            if (!jukeboxes.containsKey(block.location)) return@event
 
             if (!player.hasPermission(JukeboxPermissions.DELETE)) {
                 isCancelled = true
                 return@event
             }
+
+            jukeboxes.remove(block.location)
+                ?: return@event
 
             items.forEach { item ->
                 if (item.itemStack.type == Material.JUKEBOX) {
@@ -79,6 +88,7 @@ class JukeboxGuiPlugin : JavaPlugin() {
             }
 
             player.sendMessage(!"&cRemoved a jukebox item")
+            async { saveJukeboxes() }
         }
 
         rawCommand("get-jukebox") {
@@ -89,12 +99,30 @@ class JukeboxGuiPlugin : JavaPlugin() {
                 player.sendMessage(!"&aGiven you a jukebox item")
             }
         } register false
+
+        placeholderExpansion {
+            val x by intArgument()
+            val y by intArgument()
+            val z by intArgument()
+            placeholder("now-playing" / x / y / z) {
+                val world = requestedBy?.location?.world ?: return@placeholder "Invalid world"
+                val loc = Location(world, x().toDouble(), y().toDouble(), z().toDouble())
+                val jukebox = jukeboxes[loc] ?: return@placeholder "Unknown jukebox"
+
+                jukebox.currentlyPlaying?.name() ?: "Nothing"
+            }
+        }
     }
 
     fun loadJukeboxes() {
-        config.getList("locations")
-            ?.filterIsInstance<ConfigurationSection>()
-            ?.map { it.getLocation("") }
+        this.jukeboxes.putAll(
+            config.get("locations")
+                .let { it as? MemorySection }
+                .also { println(it?.get(".")) }
+                .let { it as? Collection<Location> }
+                ?.map { loc -> loc to Jukebox(loc) }
+                ?: emptyList()
+        )
     }
 
     fun saveJukeboxes() {

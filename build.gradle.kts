@@ -28,7 +28,8 @@ repositories {
 dependencies {
     paperweight.paperDevBundle(libs.versions.paperApi.get())
 
-    compileOnly(libs.ktgui)
+//    compileOnly(libs.ktgui)
+    compileOnly(files("./libs/api-2.4.4-alpha-dev.jar"))
     compileOnly(libs.placeholder.api)
 }
 
@@ -55,6 +56,9 @@ tasks {
 
     shadowJar {
         mergeServiceFiles()
+        minimize {
+            exclude("kotlin/**")
+        }
     }
 
     test {
