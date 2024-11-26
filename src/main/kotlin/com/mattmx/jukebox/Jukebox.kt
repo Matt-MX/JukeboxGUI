@@ -5,6 +5,8 @@ import com.mattmx.ktgui.GuiManager
 import com.mattmx.ktgui.components.screen.GuiScreen
 import com.mattmx.ktgui.dsl.button
 import com.mattmx.ktgui.dsl.gui
+import com.mattmx.ktgui.scheduling.TaskTracker
+import com.mattmx.ktgui.scheduling.TaskTrackerTask
 import com.mattmx.ktgui.scheduling.asyncRepeat
 import com.mattmx.ktgui.scheduling.syncDelayed
 import com.mattmx.ktgui.sound.sound
@@ -38,7 +40,7 @@ class Jukebox(
         .count(5)
     var currentlyPlaying: Sound? = null
         private set
-    var finishPlayingTask: BukkitTask? = null
+    val tasks = TaskTracker()
 
     fun playIfNotAlready(song: Key): Boolean {
         if (isPlaying) {
@@ -59,12 +61,16 @@ class Jukebox(
 
         currentlyPlaying = sound
         val ticks = getSongDuration(sound).inWholeSeconds * 20L
-        val repeating = asyncRepeat(20L) {
+        
+        var repeating: TaskTrackerTask? = null
+        tasks.runAsyncRepeat(20L) {
+            repeating = this
             particles.spawn()
         }
-        finishPlayingTask = syncDelayed(ticks) {
-            repeating.cancel()
+        tasks.runSyncLater(ticks) {
+            repeating?.cancel()
             stop()
+            tasks.cancelAll()
         }
 
         location.world.playSound(sound)
@@ -78,8 +84,7 @@ class Jukebox(
         location.world.stopSound(currentlyPlaying!!)
 
         currentlyPlaying = null
-        finishPlayingTask?.cancel()
-        finishPlayingTask = null
+        tasks.cancelAll()
 
         refreshGuis()
     }
