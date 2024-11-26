@@ -11,7 +11,7 @@ import com.mattmx.ktgui.scheduling.async
 import com.mattmx.ktgui.utils.not
 import org.bukkit.Location
 import org.bukkit.Material
-import org.bukkit.configuration.MemorySection
+import org.bukkit.configuration.file.YamlConfiguration
 import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.event.block.BlockDropItemEvent
 import org.bukkit.event.block.BlockPlaceEvent
@@ -100,6 +100,18 @@ class JukeboxGuiPlugin : JavaPlugin() {
             }
         } register false
 
+        rawCommand("jukebox-reload") {
+            permission = JukeboxPermissions.RELOAD
+            runs {
+                val result = kotlin.runCatching { reloadConfig() }
+                if (result.isSuccess) {
+                    source.sendMessage(!"&aReloaded!")
+                } else {
+                    source.sendMessage(!"&cUnable to reload, please check console for errors!")
+                }
+            }
+        } register false
+
         placeholderExpansion {
             val x by intArgument()
             val y by intArgument()
@@ -116,17 +128,23 @@ class JukeboxGuiPlugin : JavaPlugin() {
 
     fun loadJukeboxes() {
         this.jukeboxes.putAll(
-            config.get("locations")
-                .let { it as? MemorySection }
-                .also { println(it?.get(".")) }
-                .let { it as? Collection<Location> }
-                ?.map { loc -> loc to Jukebox(loc) }
-                ?: emptyList()
+            config.getConfigurationSection("locations")?.let { locations ->
+                locations.getKeys(false).mapNotNull { key ->
+                    val loc = locations.getLocation(key)
+                        ?: return@mapNotNull null
+
+                    loc to Jukebox(loc)
+                }
+            } ?: emptySet()
         )
     }
 
     fun saveJukeboxes() {
-        config.set("locations", jukeboxes.keys)
+        config.createSection("locations").let { locations ->
+            this.jukeboxes.keys.forEachIndexed { i, loc ->
+                locations.set(i.toString(), loc)
+            }
+        }
         saveConfig()
     }
 

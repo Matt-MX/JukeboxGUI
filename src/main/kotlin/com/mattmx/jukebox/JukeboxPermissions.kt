@@ -8,4 +8,6 @@ object JukeboxPermissions {
     const val CREATE = "jukebox.create"
     const val DELETE = "jukebox.delete"
     const val GET = "jukebox.get"
+
+    const val RELOAD = "jukebox.reload"
 }
