@@ -15,6 +15,7 @@ import com.viaversion.viaversion.api.Via
 import com.viaversion.viaversion.api.protocol.version.ProtocolVersion
 import org.bukkit.Location
 import org.bukkit.Material
+import org.bukkit.event.block.Action
 import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.event.block.BlockDropItemEvent
 import org.bukkit.event.block.BlockPlaceEvent
@@ -48,6 +49,11 @@ class JukeboxGuiPlugin : JavaPlugin() {
         event<PlayerInteractEvent>(ignoreCancelled = true) {
             val loc = clickedBlock?.location ?: return@event
             val jukebox = jukeboxes[loc] ?: return@event
+
+            if (action == Action.LEFT_CLICK_BLOCK && player.hasPermission(JukeboxPermissions.DELETE)) {
+                isCancelled = false
+                return@event
+            }
 
             isCancelled = true
             if (!player.hasPermission(JukeboxPermissions.OPEN_GUI)) {

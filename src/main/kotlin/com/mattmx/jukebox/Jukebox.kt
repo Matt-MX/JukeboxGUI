@@ -38,6 +38,7 @@ class Jukebox(
         .location(location.toCenterLocation().add(0.0, 1.0, 0.0))
         .allPlayers()
         .count(5)
+    var lastPlayedBy: String? = null
     var currentlyPlaying: Sound? = null
         private set
     val tasks = TaskTracker()
@@ -74,7 +75,10 @@ class Jukebox(
         }
 
         // TODO: maybe set block state?
-
+        (location.block.state as? org.bukkit.block.Jukebox)?.let { state ->
+            state.setPlaying(getMaterial(sound.name()))
+            state.startPlaying()
+        }
         location.world.playSound(sound)
 
         refreshGuis()
@@ -84,6 +88,11 @@ class Jukebox(
         if (currentlyPlaying == null) return
 
         location.world.stopSound(currentlyPlaying!!)
+
+        (location.block.state as? org.bukkit.block.Jukebox)?.let { state ->
+            state.setPlaying(null)
+            state.stopPlaying()
+        }
 
         currentlyPlaying = null
         tasks.cancelAll()
@@ -111,13 +120,18 @@ class Jukebox(
             // Start at 2nd slot on first row
             var i = 9 + 1
             for (song in SONGS) {
-                val asItem = Material.entries.firstOrNull { it.key().asString() == song.key().asString().replace(".", "_") }
+                val asItem = getMaterial(song.key())
                     ?: continue
 
                 val isCurrentlyPlaying = currentlyPlaying?.name() == song.key()
 
                 button(asItem) {
-                    named(asItem.translationKey().translatable.color(NamedTextColor.LIGHT_PURPLE).fallback("Unknown Disc (Outdated Client)"))
+                    named(
+                        asItem.translationKey()
+                            .translatable
+                            .color(NamedTextColor.LIGHT_PURPLE)
+                            .fallback("Unknown Disc (Outdated Client)")
+                    )
                     lore {
                         if (isCurrentlyPlaying) {
                             if (!player.hasPermission(JukeboxPermissions.ACTION_STOP)) return@lore
@@ -138,6 +152,7 @@ class Jukebox(
                         if (!player.hasPermission(JukeboxPermissions.ACTION_STOP)) return@button
                         click.left {
                             if (limiter.test(player)) {
+                                forceClose()
                                 stop()
                             } else reply(!"&cPlease wait before doing that again.")
                         }
@@ -145,6 +160,8 @@ class Jukebox(
                         if (!player.hasPermission(JukeboxPermissions.ACTION_PLAY)) return@button
                         click.left {
                             if (limiter.test(player)) {
+                                lastPlayedBy = player.name
+                                forceClose()
                                 play(song.key())
                             } else reply(!"&cPlease wait before doing that again.")
                         }
@@ -167,7 +184,7 @@ class Jukebox(
                     }
                 } slot last() - 4
             } else {
-                val asItem = Material.entries.firstOrNull { it.key().asString() == currentlyPlaying!!.name().asString().replace(".", "_") }
+                val asItem = getMaterial(currentlyPlaying!!.name())
                     ?: Material.LIME_STAINED_GLASS_PANE
                 button(asItem) {
                     named(!"&aNow playing:")
@@ -175,6 +192,7 @@ class Jukebox(
 
                         // TODO incorrect key
 //                        +asItem.translationKey().translatable.color(NamedTextColor.LIGHT_PURPLE)
+                        +!"&7Played by: ${lastPlayedBy ?: "Unknown"}"
 
                         if (!player.hasPermission(JukeboxPermissions.ACTION_STOP)) return@lore
                         +Component.empty()
@@ -183,6 +201,7 @@ class Jukebox(
                     if (!player.hasPermission(JukeboxPermissions.ACTION_STOP)) return@button
                     click.left {
                         if (limiter.test(player)) {
+                            forceClose()
                             stop()
                         } else reply(!"&cPlease wait before doing that again.")
                     }
@@ -206,7 +225,11 @@ class Jukebox(
             .toTypedArray()
             .filter { it.key().asString().contains("music_disc") }
 
-        fun getSongDuration(song: Sound) = DURATION.getOrDefault(song.name().asString().replace("minecraft:music_disc.", ""), 3.minutes)
+        fun getMaterial(song: Key) =
+            Material.entries.firstOrNull { it.key().asString() == song.asString().replace(".", "_") }
+
+        fun getSongDuration(song: Sound) =
+            DURATION.getOrDefault(song.name().asString().replace("minecraft:music_disc.", ""), 3.minutes)
 
         val DURATION = hashMapOf(
             "5" to 2.minutes + 58.seconds,
