@@ -27,7 +27,8 @@ repositories {
 }
 
 dependencies {
-    paperweight.paperDevBundle(libs.versions.paperApi.get())
+    // paperweight.paperDevBundle(libs.versions.paperApi.get())
+    compileOnly(libs.paper.api)
 
 //    compileOnly(libs.ktgui)
     compileOnly(files("./libs/api-2.4.4-alpha-dev.jar"))
