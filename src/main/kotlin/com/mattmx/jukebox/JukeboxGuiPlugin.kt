@@ -9,12 +9,14 @@ import com.mattmx.ktgui.dsl.event
 import com.mattmx.ktgui.dsl.placeholder
 import com.mattmx.ktgui.dsl.placeholderExpansion
 import com.mattmx.ktgui.scheduling.async
+import com.mattmx.ktgui.sound.sound
 import com.mattmx.ktgui.utils.not
 import com.mattmx.ktgui.utils.pretty
 import com.viaversion.viaversion.api.Via
 import com.viaversion.viaversion.api.protocol.version.ProtocolVersion
 import org.bukkit.Location
 import org.bukkit.Material
+import org.bukkit.Sound
 import org.bukkit.event.block.Action
 import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.event.block.BlockDropItemEvent
@@ -41,7 +43,12 @@ class JukeboxGuiPlugin : JavaPlugin() {
                 }
 
                 jukeboxes[block.location] = Jukebox(block.location)
-                player.sendMessage(!"&aPlaced a jukebox item!")
+                player.playSound(
+                    sound(Sound.BLOCK_NOTE_BLOCK_PLING)
+                        .location(block.location)
+                        .volume(1f)
+                        .build()
+                )
                 async { saveJukeboxes() }
             }
         }
@@ -75,7 +82,6 @@ class JukeboxGuiPlugin : JavaPlugin() {
             jukeboxes.remove(block.location)?.destroy()
                 ?: return@event
 
-            player.sendMessage(!"&cRemoved a jukebox item")
             async { saveJukeboxes() }
         }
 
@@ -96,7 +102,6 @@ class JukeboxGuiPlugin : JavaPlugin() {
                 }
             }
 
-            player.sendMessage(!"&cRemoved a jukebox item")
             async { saveJukeboxes() }
         }
 
@@ -105,7 +110,7 @@ class JukeboxGuiPlugin : JavaPlugin() {
             playerOnly = true
             runs {
                 player.inventory.addItem(JukeboxItem.getItem())
-                player.sendMessage(!"&aGiven you a jukebox item")
+                player.sendMessage(!"<green>Given you a jukebox item".branding())
             }
         } register false
 
@@ -114,9 +119,9 @@ class JukeboxGuiPlugin : JavaPlugin() {
             runs {
                 val result = kotlin.runCatching { reloadConfig() }
                 if (result.isSuccess) {
-                    source.sendMessage(!"&aReloaded!")
+                    source.sendMessage(!"<green>Reloaded!".branding())
                 } else {
-                    source.sendMessage(!"&cUnable to reload, please check console for errors!")
+                    source.sendMessage(!"<error>Unable to reload, please check console for errors!".branding())
                 }
             }
         } register false
@@ -135,7 +140,7 @@ class JukeboxGuiPlugin : JavaPlugin() {
                 jukebox.currentlyPlaying?.name()?.asString()?.let { named ->
                     val translation = if (version < ProtocolVersion.v1_21.version)
                         named.replace("minecraft:", "item.minecraft.")
-                        .replace("music_disc.", "music_disc_") + ".desc"
+                            .replace("music_disc.", "music_disc_") + ".desc"
                     else named.replace("minecraft:music_disc", "jukebox_song.minecraft")
                     "<lang:$translation>"
                 } ?: "Nothing"

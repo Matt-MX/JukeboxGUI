@@ -21,7 +21,7 @@ object JukeboxItem {
     @JvmStatic
     fun tagAndNameItem(itemStack: ItemStack) = itemStack.editMeta { meta ->
         meta.persistentDataContainer.set(KEY, PersistentDataType.BOOLEAN, true)
-        meta.displayName(!"&dJukebox Item")
+        meta.displayName(!"<light>&lJukebox Item".branding())
     }
 
     @JvmStatic

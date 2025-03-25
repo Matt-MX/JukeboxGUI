@@ -3,7 +3,6 @@ import java.io.InputStreamReader
 
 plugins {
     alias(libs.plugins.runPaper)
-    alias(libs.plugins.paperweight) apply true
     alias(libs.plugins.kotlinJvm) apply true
     alias(libs.plugins.shadow) apply true
 

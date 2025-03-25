@@ -15,6 +15,7 @@ import net.kyori.adventure.key.Key
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.TextColor
 import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.Particle
@@ -129,18 +130,18 @@ class Jukebox(
                     named(
                         asItem.translationKey()
                             .translatable
-                            .color(NamedTextColor.LIGHT_PURPLE)
+                            .color(TextColor.fromHexString("#FF331C"))
                             .fallback("Unknown Disc (Outdated Client)")
                     )
                     lore {
                         if (isCurrentlyPlaying) {
                             if (!player.hasPermission(JukeboxPermissions.ACTION_STOP)) return@lore
                             +Component.empty()
-                            +!"&c⏹ Click to stop"
+                            +!"<error>⏹ Click to stop".branding()
                         } else {
                             if (!player.hasPermission(JukeboxPermissions.ACTION_PLAY)) return@lore
                             +Component.empty()
-                            +!"&a▶ Click to play"
+                            +!"<green>▶ Click to play".branding()
                         }
                     }
                     if (isCurrentlyPlaying) {
@@ -154,7 +155,7 @@ class Jukebox(
                             if (limiter.test(player)) {
                                 forceClose()
                                 stop()
-                            } else reply(!"&cPlease wait before doing that again.")
+                            } else reply(!"<error>Please wait before doing that again.".branding())
                         }
                     } else {
                         if (!player.hasPermission(JukeboxPermissions.ACTION_PLAY)) return@button
@@ -163,7 +164,7 @@ class Jukebox(
                                 lastPlayedBy = player.name
                                 forceClose()
                                 play(song.key())
-                            } else reply(!"&cPlease wait before doing that again.")
+                            } else reply(!"<error>Please wait before doing that again.".branding())
                         }
                     }
                 } slot i
@@ -176,40 +177,40 @@ class Jukebox(
 
             if (currentlyPlaying == null) {
                 button(Material.RED_STAINED_GLASS_PANE) {
-                    named(!"&cNothing is playing")
+                    named(!"<error>Nothing is playing".branding())
                     lore {
                         if (!player.hasPermission(JukeboxPermissions.ACTION_PLAY)) return@lore
                         +Component.empty()
-                        +!"&fChoose a song!"
+                        +!"<light>Choose a song!".branding()
                     }
                 } slot last() - 4
             } else {
                 val asItem = getMaterial(currentlyPlaying!!.name())
                     ?: Material.LIME_STAINED_GLASS_PANE
                 button(asItem) {
-                    named(!"&aNow playing:")
+                    named(!"<green>Now playing:".branding())
                     lore {
 
                         // TODO incorrect key
 //                        +asItem.translationKey().translatable.color(NamedTextColor.LIGHT_PURPLE)
-                        +!"&7Played by: ${lastPlayedBy ?: "Unknown"}"
+                        +!"<dull>Played by: ${lastPlayedBy ?: "Unknown"}".branding()
 
                         if (!player.hasPermission(JukeboxPermissions.ACTION_STOP)) return@lore
                         +Component.empty()
-                        +!"&c⏹ Click to stop"
+                        +!"<error>⏹ Click to stop".branding()
                     }
                     if (!player.hasPermission(JukeboxPermissions.ACTION_STOP)) return@button
                     click.left {
                         if (limiter.test(player)) {
                             forceClose()
                             stop()
-                        } else reply(!"&cPlease wait before doing that again.")
+                        } else reply(!"<error>Please wait before doing that again.".branding())
                     }
                 } slot last() - 4
             }
 
             button(Material.SPECTRAL_ARROW) {
-                named(!"&dClose")
+                named(!"<title>Close".branding())
                 click.left { forceClose() }
             } slot last()
         }
