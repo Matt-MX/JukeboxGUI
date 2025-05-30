@@ -57,8 +57,9 @@ class Jukebox(
         stop()
 
         val sound = sound(song)
+            .source(Sound.Source.RECORD)
             .location(location)
-            .volume(2f)
+            .volume(0.5f)
             .build()
 
         currentlyPlaying = sound
@@ -222,8 +223,8 @@ class Jukebox(
     }
 
     companion object {
-        val SONGS = org.bukkit.Sound.entries
-            .toTypedArray()
+        val SONGS = org.bukkit.Sound
+            .values()
             .filter { it.key().asString().contains("music_disc") }
 
         fun getMaterial(song: Key) =

@@ -30,7 +30,7 @@ dependencies {
     compileOnly(libs.paper.api)
 
 //    compileOnly(libs.ktgui)
-    compileOnly(files("./libs/api-2.4.4-alpha-dev.jar"))
+    implementation(files("./libs/api-2.4.4-alpha-dev.jar"))
     compileOnly(libs.placeholder.api)
     compileOnly(libs.via.version)
 }
@@ -67,10 +67,6 @@ tasks {
         useJUnitPlatform()
     }
 
-    assemble {
-        dependsOn("reobfJar")
-    }
-
     runServer {
         val mcVersion = libs.versions.paperApi.get().split("-")[0]
         minecraftVersion(mcVersion)
@@ -80,6 +76,10 @@ tasks {
             hangar("ViaBackwards", "5.0.1")
             hangar("PlaceholderAPI", "2.11.6")
         }
+    }
+
+    build {
+        dependsOn(shadowJar)
     }
 }
 
